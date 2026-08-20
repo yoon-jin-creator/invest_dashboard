@@ -258,7 +258,7 @@ tr.clk{cursor:pointer}tr.clk:hover>td{background:#f4f7fb}
 
 <div id="tab-idiff" class="hide"><div class="ivp">
  <div class="ivrow2">
-  <div class="ivcardx"><h3>자본손익 구성 (실현 + 미실현)</h3><table id="id_cap"><tbody></tbody></table>
+  <div class="ivcardx"><h3>매매·평가손익 구성 (실현 + 미실현)</h3><table id="id_cap"><tbody></tbody></table>
    <div class="ivfoot">실현=8년 처분손익 누적. 미실현=현재 보유분 시가−회계 취득원가(2026-07-31).</div></div>
   <div class="ivcardx"><h3>배당·이자수익 구성</h3><table id="id_inc"><tbody></tbody></table>
    <div class="ivfoot">보유만 해도 받는 수익. 투자 거래처만 반영(은행·개인·사업거래처 제외). 매매수수료·증권사 융자이자만 차감.</div></div>
@@ -594,7 +594,7 @@ let _iyBuilt=false,_iyYearCh=null,_iyCurCh=null;
 function renderIYear(){
  const T=IVDATA.totals;
  document.getElementById('iy_total').textContent=ISG(T.total);
- document.getElementById('iy_eq').textContent='자본손익 '+ISG(T.real+T.unreal)+' (실현 '+ISG(T.real)+' + 미실현 '+ISG(T.unreal)+') + 배당·이자 '+ISG(T.inc);
+ document.getElementById('iy_eq').textContent='매매·평가손익 '+ISG(T.real+T.unreal)+' (실현 '+ISG(T.real)+' + 미실현 '+ISG(T.unreal)+') + 배당·이자 '+ISG(T.inc);
  if(!_iyBuilt){
   _iyBuilt=true;
   // chips
@@ -605,10 +605,11 @@ function renderIYear(){
   document.getElementById('gi_clear').onclick=()=>{GISEL.clear();syncChips();refreshIYear();};
   // 연도별 상세 table sortable + row click selects 기수
   makeSortable('iy_ytab',()=>IVDATA.periods.map(p=>({gi:p.gi,giN:+p.gi.replace('기',''),yr:p.yr,real:p.real,inc:p.inc,sum:p.sum})),rows=>{
-   document.querySelector('#iy_ytab tbody').innerHTML=rows.map(p=>`<tr class="clk" data-g="${p.gi}"><td class="c"><b>${p.gi}</b><br><span style="font-size:10px;color:#9ca3af">${p.yr}</span></td><td class="${ICL(p.real)}">${ISG(p.real)}</td><td class="${ICL(p.inc)}">${ISG(p.inc)}</td><td class="${ICL(p.sum)}"><b>${ISG(p.sum)}</b></td></tr>`).join('');
    const sr=IVDATA.periods.reduce((a,p)=>a+p.real,0),si=IVDATA.periods.reduce((a,p)=>a+p.inc,0);
-   document.querySelector('#iy_ytab tfoot').innerHTML=`<tr><td class="c">누적</td><td class="${ICL(sr)}">${ISG(sr)}</td><td class="tp">${ISG(si)}</td><td class="tp">${ISG(sr+si)}</td></tr>`;
-   document.querySelectorAll('#iy_ytab tbody tr').forEach(tr=>tr.onclick=()=>{const g=tr.dataset.g;if(GISEL.has(g))GISEL.delete(g);else GISEL.add(g);syncChips();refreshIYear();});
+   const totRow=`<tr style="background:#eef2f7;font-weight:700"><td class="c">전체 누적</td><td class="${ICL(sr)}">${ISG(sr)}</td><td class="tp">${ISG(si)}</td><td class="${ICL(sr+si)}">${ISG(sr+si)}</td></tr>`;
+   document.querySelector('#iy_ytab tbody').innerHTML=totRow+rows.map(p=>`<tr class="clk" data-g="${p.gi}"><td class="c"><b>${p.gi}</b><br><span style="font-size:10px;color:#9ca3af">${p.yr}</span></td><td class="${ICL(p.real)}">${ISG(p.real)}</td><td class="${ICL(p.inc)}">${ISG(p.inc)}</td><td class="${ICL(p.sum)}"><b>${ISG(p.sum)}</b></td></tr>`).join('');
+   document.querySelector('#iy_ytab tfoot').innerHTML='';
+   document.querySelectorAll('#iy_ytab tbody tr.clk').forEach(tr=>tr.onclick=()=>{const g=tr.dataset.g;if(GISEL.has(g))GISEL.delete(g);else GISEL.add(g);syncChips();refreshIYear();});
   },'giN',-1);
   // 30기 월별/분기
   renderIYCur('m');
@@ -752,7 +753,7 @@ let _idBuilt=false;
 function renderIDiff(){
  const A=IVACCT;
  if(!_idBuilt){_idBuilt=true;
-  document.querySelector('#id_cap tbody').innerHTML=[['실현손익 (8년 누적)',A.capital.realized],['현재 미실현 (보유분)',A.capital.unreal]].map(r=>`<tr><td class="l">${r[0]}</td><td class="${ICL(r[1])}">${ISG(r[1])}</td></tr>`).join('')+`<tr style="font-weight:700;background:#eef2f7"><td class="l">자본손익 계</td><td class="${ICL(A.capital.total)}">${ISG(A.capital.total)}</td></tr>`;
+  document.querySelector('#id_cap tbody').innerHTML=[['실현손익 (8년 누적)',A.capital.realized],['현재 미실현 (보유분)',A.capital.unreal]].map(r=>`<tr><td class="l">${r[0]}</td><td class="${ICL(r[1])}">${ISG(r[1])}</td></tr>`).join('')+`<tr style="font-weight:700;background:#eef2f7"><td class="l">매매·평가손익 계</td><td class="${ICL(A.capital.total)}">${ISG(A.capital.total)}</td></tr>`;
   document.querySelector('#id_inc tbody').innerHTML=Object.entries(A.income_brk).map(([k,v])=>`<tr><td class="l">${k}</td><td class="${ICL(v)}">${ISG(v)}</td></tr>`).join('')+`<tr style="font-weight:700;background:#eef2f7"><td class="l">배당·이자수익 계</td><td class="tp">${ISG(A.income_net)}</td></tr>`;
   // 종목별 회계 vs HTS 비교 (증권사 합산)
   const byn={};
